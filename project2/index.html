@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nebula Hands - Interactive 3D</title>
+    <!-- Premium Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700&family=Outfit:wght@300;400;600&display=swap"
+        rel="stylesheet">
+
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+            background-color: #050510;
+            font-family: 'Outfit', sans-serif;
+            color: white;
+        }
+
+        #canvas-container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+        }
+
+        /* Glassmorphism Video Container */
+        #video-container {
+            position: absolute;
+            bottom: 30px;
+            right: 30px;
+            width: 200px;
+            height: 150px;
+            z-index: 2;
+            border-radius: 12px;
+            overflow: hidden;
+            background: rgba(20, 20, 30, 0.4);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.5);
+            transition: opacity 0.5s ease;
+        }
+
+        .input_video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transform: scaleX(-1);
+            opacity: 0.8;
+        }
+
+        #loading {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            pointer-events: none;
+            z-index: 10;
+        }
+
+        #loading h1 {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 2rem;
+            margin-bottom: 10px;
+            background: linear-gradient(90deg, #00f2ff, #ae00ff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            animation: pulse 2s infinite;
+        }
+
+        /* Modern UI Panel */
+        #ui-panel {
+            position: absolute;
+            top: 30px;
+            left: 30px;
+            z-index: 10;
+            background: rgba(10, 10, 20, 0.6);
+            padding: 24px;
+            border-radius: 16px;
+            pointer-events: none;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            backdrop-filter: blur(12px);
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
+            max-width: 300px;
+        }
+
+        #ui-panel h2 {
+            margin: 0 0 16px 0;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.2rem;
+            letter-spacing: 1px;
+            background: linear-gradient(90deg, #fff, #aaa);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-transform: uppercase;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            padding-bottom: 8px;
+        }
+
+        .control-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 12px;
+            font-size: 0.95rem;
+            color: rgba(255, 255, 255, 0.9);
+        }
+
+        .icon {
+            font-size: 1.2rem;
+            margin-right: 12px;
+            min-width: 25px;
+            text-align: center;
+        }
+
+        .label {
+            flex-grow: 1;
+        }
+
+        .tag {
+            font-size: 0.75rem;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .tag-purple {
+            background: rgba(138, 43, 226, 0.3);
+            color: #c471ed;
+            border: 1px solid rgba(138, 43, 226, 0.4);
+        }
+
+        .tag-teal {
+            background: rgba(0, 255, 255, 0.15);
+            color: #00f2ff;
+            border: 1px solid rgba(0, 255, 255, 0.3);
+        }
+
+        .tag-gold {
+            background: rgba(255, 215, 0, 0.15);
+            color: #ffd700;
+            border: 1px solid rgba(255, 215, 0, 0.3);
+        }
+
+        .tag-danger {
+            background: rgba(255, 0, 85, 0.2);
+            color: #ff0055;
+            border: 1px solid rgba(255, 0, 85, 0.4);
+        }
+
+        @keyframes pulse {
+            0% {
+                opacity: 0.7;
+            }
+
+            50% {
+                opacity: 1;
+            }
+
+            100% {
+                opacity: 0.7;
+            }
+        }
+    </style>
+
+    <!-- Import Maps & Scripts -->
+    <script type="importmap">
+        {
+            "imports": {
+                "three": "https://unpkg.com/three@0.155.0/build/three.module.js",
+                "three/addons/": "https://unpkg.com/three@0.155.0/examples/jsm/"
+            }
+        }
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/control_utils/control_utils.js"
+        crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js"
+        crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js" crossorigin="anonymous"></script>
+</head>
+
+<body>
+    <div id="loading">
+        <h1>NEBULA HANDS</h1>
+        <div style="opacity: 0.7">Initializing Core Systems...<br>Please allow camera access</div>
+    </div>
+
+    <div id="ui-panel">
+        <h2>Control Modules</h2>
+        <div class="control-item">
+            <span class="icon">✋</span>
+            <span class="label">One Hand</span>
+            <span class="tag tag-purple">Galaxy</span>
+        </div>
+        <div class="control-item">
+            <span class="icon">👐</span>
+            <span class="label">Hands Far</span>
+            <span class="tag tag-teal">DNA Helix</span>
+        </div>
+        <div class="control-item">
+            <span class="icon">🤲</span>
+            <span class="label">Hands Close</span>
+            <span class="tag tag-gold">Golden Knot</span>
+        </div>
+        <div class="control-item">
+            <span class="icon">👌</span>
+            <span class="label">Pinch</span>
+            <span class="tag tag-danger">Implode</span>
+        </div>
+    </div>
+
+    <div id="canvas-container"></div>
+    <div id="video-container">
+        <video class="input_video" playsinline></video>
+    </div>
+
+    <script type="module" src="./src/main.js"></script>
+</body>
+
+</html>
